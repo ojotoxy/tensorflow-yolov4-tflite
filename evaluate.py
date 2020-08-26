@@ -1,14 +1,19 @@
-from absl import app, flags, logging
-from absl.flags import FLAGS
-import cv2
+# from matplotlib import pyplot as plt
+import json
 import os
 import shutil
+
+import core.utils as utils
+import cv2
 import numpy as np
 import tensorflow as tf
+import tvm
+from absl import app, flags
+from absl.flags import FLAGS
+from core.config import cfg
 from core.yolov4 import filter_boxes
 from tensorflow.python.saved_model import tag_constants
-import core.utils as utils
-from core.config import cfg
+from tvm.contrib import graph_runtime
 
 flags.DEFINE_string('weights', './checkpoints/yolov4-416',
                     'path to weights file')
@@ -45,6 +50,21 @@ def main(_argv):
         output_details = interpreter.get_output_details()
         print(input_details)
         print(output_details)
+    elif  FLAGS.framework == 'tvm':
+        ctx = tvm.cpu(0)
+        loaded_graph = open(os.path.join(FLAGS.weights, "modelDescription.json")).read()
+        loaded_lib = tvm.runtime.load_module(os.path.join(FLAGS.weights, "modelLibrary.so"))
+        loaded_params = bytearray(open(os.path.join(FLAGS.weights,  "modelParams.params"), "rb").read())
+        #
+        # Get rid of the leip key
+        #
+        graphjson = json.loads(loaded_graph)
+        if 'leip' in list(graphjson.keys()):
+            del graphjson['leip']
+            loaded_graph = json.dumps(graphjson)
+
+        m = graph_runtime.create(loaded_graph, loaded_lib, ctx)
+        m.load_params(loaded_params)
     else:
         saved_model_loaded = tf.saved_model.load(FLAGS.weights, tags=[tag_constants.SERVING])
         infer = saved_model_loaded.signatures['serving_default']
@@ -92,6 +112,15 @@ def main(_argv):
                     boxes, pred_conf = filter_boxes(pred[1], pred[0], score_threshold=0.25)
                 else:
                     boxes, pred_conf = filter_boxes(pred[0], pred[1], score_threshold=0.25)
+            elif FLAGS.framework == 'tvm':
+                m.set_input("input_1", tvm.nd.array(image_data))
+                ftimer = m.module.time_evaluator("run", ctx, number=1, repeat=1)
+                prof_res = np.array(ftimer().results) * 1000  # convert to millisecond
+                tvm_output = m.get_output(0)
+
+                output_tensors = tvm_output.asnumpy()
+                print(output_tensors)
+                exit()
             else:
                 batch_data = tf.constant(image_data)
                 pred_bbox = infer(batch_data)
