@@ -113,7 +113,8 @@ def main(_argv):
                 else:
                     boxes, pred_conf = filter_boxes(pred[0], pred[1], score_threshold=0.25)
             elif FLAGS.framework == 'tvm':
-                m.set_input("input_1", tvm.nd.array(image_data))
+                image_data_casted = image_data.astype(np.uint8)
+                m.set_input("input_1", tvm.nd.array(image_data_casted))
                 ftimer = m.module.time_evaluator("run", ctx, number=1, repeat=1)
                 prof_res = np.array(ftimer().results) * 1000  # convert to millisecond
                 tvm_output = m.get_output(0)
