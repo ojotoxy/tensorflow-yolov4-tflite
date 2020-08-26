@@ -130,10 +130,11 @@ def main(_argv):
             image_size = image.shape[:2]
             # image_data = utils.image_preprocess(np.copy(image), [INPUT_SIZE, INPUT_SIZE])
             image_data = cv2.resize(np.copy(image), (INPUT_SIZE, INPUT_SIZE))
-            image_data = image_data / 255.
-            image_data = image_data[np.newaxis, ...].astype(np.float32)
 
             if FLAGS.framework == 'tflite':
+                image_data = image_data / 255.
+                image_data = image_data[np.newaxis, ...].astype(np.float32)
+
                 interpreter.set_tensor(input_details[0]['index'], image_data)
                 interpreter.invoke()
                 pred = [interpreter.get_tensor(output_details[i]['index']) for i in range(len(output_details))]
@@ -142,6 +143,9 @@ def main(_argv):
                 else:
                     boxes, pred_conf = filter_boxes(pred[0], pred[1], score_threshold=0.25)
             elif FLAGS.framework == 'tvm':
+                # image_data = image_data / 255. # DO NOT DIVIDE by 255 for uint8 eval!
+                image_data = image_data[np.newaxis, ...].astype(np.float32)
+
                 image_data_casted = image_data.astype(np.uint8)
                 m.set_input("input_1", tvm.nd.array(image_data_casted))
                 ftimer = m.module.time_evaluator("run", ctx, number=1, repeat=1)
@@ -161,6 +165,9 @@ def main(_argv):
 
                 #exit()
             else:
+                image_data = image_data / 255.
+                image_data = image_data[np.newaxis, ...].astype(np.float32)
+
                 batch_data = tf.constant(image_data)
                 pred_bbox = infer(batch_data)
                 for key, value in pred_bbox.items():
