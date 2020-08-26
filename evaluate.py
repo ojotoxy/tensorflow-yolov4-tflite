@@ -27,6 +27,7 @@ flags.DEFINE_string('annotation_path', "./data/dataset/val2017.txt", 'annotation
 flags.DEFINE_string('write_image_path', "./data/detection/", 'write image path')
 flags.DEFINE_float('iou', 0.5, 'iou threshold')
 flags.DEFINE_float('score', 0.25, 'score threshold')
+flags.DEFINE_integer('input_size', 416, 'define input size of export model')
 
 
 
