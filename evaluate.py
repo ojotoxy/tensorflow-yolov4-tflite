@@ -140,11 +140,20 @@ def main(_argv):
 
                 interpreter.set_tensor(input_details[0]['index'], image_data)
                 interpreter.invoke()
-                pred = [interpreter.get_tensor(output_details[i]['index']) for i in range(len(output_details))]
-                if FLAGS.model == 'yolov4' and FLAGS.tiny == True:
-                    boxes, pred_conf = filter_boxes(pred[1], pred[0], score_threshold=0.25)
-                else:
-                    boxes, pred_conf = filter_boxes(pred[0], pred[1], score_threshold=0.25)
+                # pred = [interpreter.get_tensor(output_details[i]['index']) for i in range(len(output_details))]
+                # if FLAGS.model == 'yolov4' and FLAGS.tiny == True:
+                #     boxes, pred_conf = filter_boxes(pred[1], pred[0], score_threshold=0.25)
+                # else:
+                #     boxes, pred_conf = filter_boxes(pred[0], pred[1], score_threshold=0.25)
+                fm1 = interpreter.get_tensor(output_details[0]['index'])
+                fm2 = interpreter.get_tensor(output_details[1]['index'])
+                fm3 = interpreter.get_tensor(output_details[2]['index'])
+                print(fm1.shape)
+                print(fm2.shape)
+                print(fm3.shape)
+                pred = my_decode([fm1, fm2, fm3]) # these need to be ordered biggest tensor to smallest I think
+                boxes, pred_conf = filter_boxes(pred[0], pred[1], score_threshold=FLAGS.score)
+
             elif FLAGS.framework == 'tvm':
                 # image_data = image_data / 255. # DO NOT DIVIDE by 255 for uint8 eval!
                 image_data = image_data[np.newaxis, ...].astype(np.float32)
