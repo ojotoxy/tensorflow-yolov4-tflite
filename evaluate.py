@@ -153,6 +153,9 @@ def main(_argv):
                 # print(fm1)
                 # print(fm2)
                 # print(fm3)
+                fm1 = fm1.astype(np.float32)
+                fm2 = fm2.astype(np.float32)
+                fm3 = fm3.astype(np.float32)
 
                 pred_bbox = my_decode([fm1, fm2, fm3])
                 for key, value in pred_bbox.items():
