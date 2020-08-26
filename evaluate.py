@@ -28,11 +28,10 @@ flags.DEFINE_string('write_image_path', "./data/detection/", 'write image path')
 flags.DEFINE_float('iou', 0.5, 'iou threshold')
 flags.DEFINE_float('score', 0.25, 'score threshold')
 
-STRIDES, ANCHORS, NUM_CLASS, XYSCALE = utils.load_config(FLAGS)
 
 
 def my_decode(feature_maps):
-
+    global NUM_CLASS, STRIDES, ANCHORS, XYSCALE
 
     bbox_tensors = []
     prob_tensors = []
@@ -55,8 +54,11 @@ def my_decode(feature_maps):
     return pred
 
 def main(_argv):
+    global NUM_CLASS, STRIDES, ANCHORS, XYSCALE
+
     INPUT_SIZE = FLAGS.size
     STRIDES, ANCHORS, NUM_CLASS, XYSCALE = utils.load_config(FLAGS)
+
     CLASSES = utils.read_class_names(cfg.YOLO.CLASSES)
 
     predicted_dir_path = './mAP/predicted'
