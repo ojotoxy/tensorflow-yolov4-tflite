@@ -49,7 +49,7 @@ def my_decode(feature_maps):
     pred_bbox = tf.concat(bbox_tensors, axis=1)
     pred_prob = tf.concat(prob_tensors, axis=1)
 
-    boxes, pred_conf = filter_boxes(pred_bbox, pred_prob, score_threshold=FLAGS.score_thres,
+    boxes, pred_conf = filter_boxes(pred_bbox, pred_prob, score_threshold=FLAGS.score,
                                     input_shape=tf.constant([FLAGS.input_size, FLAGS.input_size]))
     pred = tf.concat([boxes, pred_conf], axis=-1)
     return pred
