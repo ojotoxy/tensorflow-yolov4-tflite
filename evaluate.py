@@ -159,9 +159,9 @@ def main(_argv):
                 print(fm1.shape)
                 print(fm2.shape)
                 print(fm3.shape)
-                fm1 = my_dequantize(fm1.astype(np.float32), 1.304019583907782, 223)
-                fm2 = my_dequantize(fm2.astype(np.float32), 2.5329357670802697, 240)
-                fm3 = my_dequantize(fm3.astype(np.float32), 9.158359183517156, 247)
+                fm1 = my_dequantize(fm1.astype(np.float32), 1.1345850229263306, 223)
+                fm2 = my_dequantize(fm2.astype(np.float32), 2.054811954498291, 242)
+                fm3 = my_dequantize(fm3.astype(np.float32), 8.428282737731934, 248)
 
                 pred = my_decode([fm1, fm2, fm3]) # these need to be ordered biggest tensor to smallest I think
                 boxes, pred_conf = filter_boxes(pred[0], pred[1], score_threshold=FLAGS.score)
