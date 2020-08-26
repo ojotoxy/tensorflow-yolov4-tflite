@@ -137,8 +137,9 @@ def main(_argv):
             if FLAGS.framework == 'tflite':
                 image_data = image_data / 255.
                 image_data = image_data[np.newaxis, ...].astype(np.float32)
+                image_data_casted = image_data.astype(np.uint8)
 
-                interpreter.set_tensor(input_details[0]['index'], image_data)
+                interpreter.set_tensor(input_details[0]['index'], image_data_casted)
                 interpreter.invoke()
                 # pred = [interpreter.get_tensor(output_details[i]['index']) for i in range(len(output_details))]
                 # if FLAGS.model == 'yolov4' and FLAGS.tiny == True:
