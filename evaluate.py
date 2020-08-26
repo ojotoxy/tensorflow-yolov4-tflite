@@ -53,6 +53,9 @@ def my_decode(feature_maps):
     return pred
 
 
+def my_dequantize(tensor, scale, zp):
+    return np.multiply(scale, (tensor.astype(np.float32) - zp))
+
 def main(_argv):
     global NUM_CLASS, STRIDES, ANCHORS, XYSCALE
 
@@ -156,9 +159,9 @@ def main(_argv):
                 print(fm1.shape)
                 print(fm2.shape)
                 print(fm3.shape)
-                fm1 = fm1.astype(np.float32) / 255.
-                fm2 = fm2.astype(np.float32) / 255.
-                fm3 = fm3.astype(np.float32) / 255.
+                fm1 = my_dequantize(fm1.astype(np.float32), 1.304019583907782, 223)
+                fm2 = my_dequantize(fm2.astype(np.float32), 2.5329357670802697, 240)
+                fm3 = my_dequantize(fm3.astype(np.float32), 9.158359183517156, 247)
 
                 pred = my_decode([fm1, fm2, fm3]) # these need to be ordered biggest tensor to smallest I think
                 boxes, pred_conf = filter_boxes(pred[0], pred[1], score_threshold=FLAGS.score)
