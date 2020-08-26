@@ -158,6 +158,7 @@ def main(_argv):
                 fm3 = fm3.astype(np.float32)
 
                 pred_bbox = my_decode([fm1, fm2, fm3]) # these need to be ordered biggest tensor to smallest I think
+                pred_bbox = pred_bbox.numpy()
                 for key, value in pred_bbox.items():
                     boxes = value[:, :, 0:4]
                     pred_conf = value[:, :, 4:]
