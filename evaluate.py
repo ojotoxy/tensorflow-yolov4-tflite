@@ -146,9 +146,9 @@ def main(_argv):
                 #     boxes, pred_conf = filter_boxes(pred[1], pred[0], score_threshold=0.25)
                 # else:
                 #     boxes, pred_conf = filter_boxes(pred[0], pred[1], score_threshold=0.25)
-                fm1 = interpreter.get_tensor(output_details[0]['index'])
-                fm2 = interpreter.get_tensor(output_details[1]['index'])
-                fm3 = interpreter.get_tensor(output_details[2]['index'])
+                fm1 = interpreter.get_tensor(output_details[0]['index']).astype(np.float32)
+                fm2 = interpreter.get_tensor(output_details[1]['index']).astype(np.float32)
+                fm3 = interpreter.get_tensor(output_details[2]['index']).astype(np.float32)
                 print(fm1.shape)
                 print(fm2.shape)
                 print(fm3.shape)
