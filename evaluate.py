@@ -117,10 +117,13 @@ def main(_argv):
                 m.set_input("input_1", tvm.nd.array(image_data_casted))
                 ftimer = m.module.time_evaluator("run", ctx, number=1, repeat=1)
                 prof_res = np.array(ftimer().results) * 1000  # convert to millisecond
-                tvm_output = m.get_output(0)
+                fm1 = m.get_output(0).asnumpy()
+                fm2 = m.get_output(0).asnumpy()
+                fm3 = m.get_output(0).asnumpy()
+                print(fm1)
+                print(fm2)
+                print(fm3)
 
-                output_tensors = tvm_output.asnumpy()
-                print(output_tensors)
                 exit()
             else:
                 batch_data = tf.constant(image_data)
