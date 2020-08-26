@@ -30,12 +30,13 @@ def save_tf():
       prob_tensors.append(output_tensors[1])
   else:
     for i, fm in enumerate(feature_maps):
-      if i == 0:
-        output_tensors = decode(fm, FLAGS.input_size // 8, NUM_CLASS, STRIDES, ANCHORS, i, XYSCALE, FLAGS.framework)
-      elif i == 1:
-        output_tensors = decode(fm, FLAGS.input_size // 16, NUM_CLASS, STRIDES, ANCHORS, i, XYSCALE, FLAGS.framework)
-      else:
-        output_tensors = decode(fm, FLAGS.input_size // 32, NUM_CLASS, STRIDES, ANCHORS, i, XYSCALE, FLAGS.framework)
+      with tf.name_scope("featuremap-"+str(i)) as scope:
+        if i == 0:
+          output_tensors = decode(fm, FLAGS.input_size // 8, NUM_CLASS, STRIDES, ANCHORS, i, XYSCALE, FLAGS.framework)
+        elif i == 1:
+          output_tensors = decode(fm, FLAGS.input_size // 16, NUM_CLASS, STRIDES, ANCHORS, i, XYSCALE, FLAGS.framework)
+        else:
+          output_tensors = decode(fm, FLAGS.input_size // 32, NUM_CLASS, STRIDES, ANCHORS, i, XYSCALE, FLAGS.framework)
       bbox_tensors.append(output_tensors[0])
       prob_tensors.append(output_tensors[1])
   pred_bbox = tf.concat(bbox_tensors, axis=1)
@@ -45,7 +46,8 @@ def save_tf():
   else:
     boxes, pred_conf = filter_boxes(pred_bbox, pred_prob, score_threshold=FLAGS.score_thres, input_shape=tf.constant([FLAGS.input_size, FLAGS.input_size]))
     pred = tf.concat([boxes, pred_conf], axis=-1)
-  model = tf.keras.Model(input_layer, pred)
+  model = tf.keras.Model(input_layer, feature_maps)
+  #model = tf.keras.Model(input_layer, pred)
   utils.load_weights(model, FLAGS.weights, FLAGS.model, FLAGS.tiny)
   model.summary()
   model.save(FLAGS.output)
