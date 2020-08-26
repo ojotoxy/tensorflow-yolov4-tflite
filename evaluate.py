@@ -148,8 +148,8 @@ def main(_argv):
                 ftimer = m.module.time_evaluator("run", ctx, number=1, repeat=1)
                 prof_res = np.array(ftimer().results) * 1000  # convert to millisecond
                 fm1 = m.get_output(0).asnumpy()
-                fm2 = m.get_output(0).asnumpy()
-                fm3 = m.get_output(0).asnumpy()
+                fm2 = m.get_output(1).asnumpy()
+                fm3 = m.get_output(2).asnumpy()
                 print(fm1.shape)
                 print(fm2.shape)
                 print(fm3.shape)
@@ -157,7 +157,7 @@ def main(_argv):
                 fm2 = fm2.astype(np.float32)
                 fm3 = fm3.astype(np.float32)
 
-                pred_bbox = my_decode([fm1, fm2, fm3])
+                pred_bbox = my_decode([fm1, fm2, fm3]) # these need to be ordered biggest tensor to smallest I think
                 for key, value in pred_bbox.items():
                     boxes = value[:, :, 0:4]
                     pred_conf = value[:, :, 4:]
