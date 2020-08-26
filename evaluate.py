@@ -3,17 +3,18 @@ import json
 import os
 import shutil
 
-import core.utils as utils
 import cv2
 import numpy as np
-import tensorflow as tf
 import tvm
-from absl import app, flags
 from absl.flags import FLAGS
-from core.config import cfg
-from core.yolov4 import filter_boxes
 from tensorflow.python.saved_model import tag_constants
 from tvm.contrib import graph_runtime
+import tensorflow as tf
+from absl import app, flags
+from absl.flags import FLAGS
+from core.yolov4 import decode, filter_boxes
+import core.utils as utils
+from core.config import cfg
 
 flags.DEFINE_string('weights', './checkpoints/yolov4-416',
                     'path to weights file')
@@ -26,6 +27,32 @@ flags.DEFINE_string('annotation_path', "./data/dataset/val2017.txt", 'annotation
 flags.DEFINE_string('write_image_path', "./data/detection/", 'write image path')
 flags.DEFINE_float('iou', 0.5, 'iou threshold')
 flags.DEFINE_float('score', 0.25, 'score threshold')
+
+STRIDES, ANCHORS, NUM_CLASS, XYSCALE = utils.load_config(FLAGS)
+
+
+def my_decode(feature_maps):
+
+
+    bbox_tensors = []
+    prob_tensors = []
+    for i, fm in enumerate(feature_maps):
+      with tf.name_scope("featuremap-"+str(i)) as scope:
+        if i == 0:
+          output_tensors = decode(fm, FLAGS.input_size // 8, NUM_CLASS, STRIDES, ANCHORS, i, XYSCALE, FLAGS.framework)
+        elif i == 1:
+          output_tensors = decode(fm, FLAGS.input_size // 16, NUM_CLASS, STRIDES, ANCHORS, i, XYSCALE, FLAGS.framework)
+        else:
+          output_tensors = decode(fm, FLAGS.input_size // 32, NUM_CLASS, STRIDES, ANCHORS, i, XYSCALE, FLAGS.framework)
+      bbox_tensors.append(output_tensors[0])
+      prob_tensors.append(output_tensors[1])
+    pred_bbox = tf.concat(bbox_tensors, axis=1)
+    pred_prob = tf.concat(prob_tensors, axis=1)
+
+    boxes, pred_conf = filter_boxes(pred_bbox, pred_prob, score_threshold=FLAGS.score_thres,
+                                    input_shape=tf.constant([FLAGS.input_size, FLAGS.input_size]))
+    pred = tf.concat([boxes, pred_conf], axis=-1)
+    return pred
 
 def main(_argv):
     INPUT_SIZE = FLAGS.size
@@ -120,11 +147,15 @@ def main(_argv):
                 fm1 = m.get_output(0).asnumpy()
                 fm2 = m.get_output(0).asnumpy()
                 fm3 = m.get_output(0).asnumpy()
-                print(fm1)
-                print(fm2)
-                print(fm3)
+                # print(fm1)
+                # print(fm2)
+                # print(fm3)
 
-                exit()
+                pred_bbox = my_decode([fm1, fm2, fm3])
+                for key, value in pred_bbox.items():
+                    boxes = value[:, :, 0:4]
+                    pred_conf = value[:, :, 4:]
+                #exit()
             else:
                 batch_data = tf.constant(image_data)
                 pred_bbox = infer(batch_data)
