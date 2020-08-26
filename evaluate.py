@@ -49,10 +49,9 @@ def my_decode(feature_maps):
     pred_bbox = tf.concat(bbox_tensors, axis=1)
     pred_prob = tf.concat(prob_tensors, axis=1)
 
-    boxes, pred_conf = filter_boxes(pred_bbox, pred_prob, score_threshold=FLAGS.score,
-                                    input_shape=tf.constant([FLAGS.input_size, FLAGS.input_size]))
-    pred = tf.concat([boxes, pred_conf], axis=-1)
+    pred = (pred_bbox, pred_prob)
     return pred
+
 
 def main(_argv):
     global NUM_CLASS, STRIDES, ANCHORS, XYSCALE
@@ -157,11 +156,9 @@ def main(_argv):
                 fm2 = fm2.astype(np.float32)
                 fm3 = fm3.astype(np.float32)
 
-                pred_bbox = my_decode([fm1, fm2, fm3]) # these need to be ordered biggest tensor to smallest I think
-                pred_bbox = pred_bbox.numpy()
-                for key, value in pred_bbox.items():
-                    boxes = value[:, :, 0:4]
-                    pred_conf = value[:, :, 4:]
+                pred = my_decode([fm1, fm2, fm3]) # these need to be ordered biggest tensor to smallest I think
+                boxes, pred_conf = filter_boxes(pred[0], pred[1], score_threshold=FLAGS.score)
+
                 #exit()
             else:
                 batch_data = tf.constant(image_data)
